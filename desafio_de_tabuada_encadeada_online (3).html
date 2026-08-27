@@ -1,0 +1,681 @@
+<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Desafio Encadeado (Modo Online)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 min-h-screen text-white flex flex-col items-center justify-between p-4 md:p-8">
+
+    <header class="w-full max-w-5xl text-center mb-6">
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
+            🎮 Super Desafio Encadeado (Modo Online)
+        </h1>
+        <p class="text-slate-300 text-sm md:text-base mt-2">
+            Painel do Professor com PIN da Turma & Sincronização em Tempo Real!
+        </p>
+    </header>
+
+    <main id="app-container" class="w-full max-w-4xl bg-white/5 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 md:p-10 shadow-2xl transition-all duration-300">
+        
+        <!-- View 0: Escolha de Perfil (Professor vs Aluno) -->
+        <div id="view-role-selection" class="space-y-6 text-center py-8">
+            <h2 class="text-3xl font-extrabold text-amber-300">👋 Como você deseja entrar?</h2>
+            <p class="text-slate-300 text-sm max-w-md mx-auto">Escolha o seu perfil para acessar o painel administrativo ou entrar na sala online com o PIN.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4">
+                <button type="button" onclick="mudarParaProfessor()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 p-8 rounded-3xl border border-purple-400/30 shadow-xl flex flex-col items-center gap-3 transition transform hover:scale-105 cursor-pointer">
+                    <span class="text-5xl">👨‍🏫</span>
+                    <h3 class="text-xl font-bold text-white">Sou Professor</h3>
+                    <p class="text-xs text-purple-200">Criar PIN da sala, ver status ao vivo da turma e acompanhar relatório.</p>
+                </button>
+
+                <button type="button" onclick="mudarParaAlunoLogin()" class="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 p-8 rounded-3xl border border-cyan-400/30 shadow-xl flex flex-col items-center gap-3 transition transform hover:scale-105 cursor-pointer">
+                    <span class="text-5xl">🎓</span>
+                    <h3 class="text-xl font-bold text-white">Sou Aluno</h3>
+                    <p class="text-xs text-cyan-200">Digitar o PIN de 4 dígitos e entrar no desafio encadeado de 20 passos.</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- View 1: Professor Dashboard (Online) -->
+        <div id="view-teacher-dashboard" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-amber-300">👨‍🏫 Painel do Professor (Online)</h2>
+                    <p class="text-xs text-slate-300">Compartilhe o PIN ou o link direto com sua turma.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="voltarParaSelecaoPerfil()" class="bg-white/10 hover:bg-white/20 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer">
+                        ⬅ Trocar Perfil
+                    </button>
+                    <button type="button" onclick="abrirModalRelatorio()" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                        📊 Relatório & Pódio Ao Vivo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card do PIN Kahoot Online -->
+            <div class="bg-gradient-to-r from-indigo-900/80 via-purple-900/80 to-slate-900/80 p-6 rounded-3xl border border-indigo-500/40 flex flex-col md:flex-row justify-between items-center gap-4 shadow-inner">
+                <div class="space-y-1 text-center md:text-left">
+                    <p class="text-xs text-indigo-300 uppercase tracking-widest font-bold">PIN DA SALA ONLINE</p>
+                    <h3 id="display-game-pin" class="text-4xl md:text-5xl font-black text-amber-300 tracking-wider">----</h3>
+                    <p id="shareable-link-info" class="text-xs text-slate-300 break-all pt-1">Link de acesso direto gerado para compartilhamento.</p>
+                </div>
+                <div class="flex flex-col gap-2 shrink-0">
+                    <button type="button" onclick="copiarLinkSala()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition cursor-pointer">
+                        📋 Copiar Link Direto
+                    </button>
+                    <button type="button" onclick="gerarNovoPinOnline()" class="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl text-xs border border-white/20 transition cursor-pointer">
+                        🔄 Gerar Novo PIN
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status da Turma em Tempo Real -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-cyan-300">📋 Status da Turma em Tempo Real</h3>
+                    <span class="text-xs text-slate-300">Alunos Conectados: <span id="contador-turma" class="text-white font-bold">0</span></span>
+                </div>
+                <div id="turma-status-list" class="bg-black/40 border border-white/10 rounded-2xl p-4 max-h-60 overflow-y-auto space-y-2 text-sm">
+                    <p class="text-slate-400 text-center italic py-4">Aguardando alunos entrarem com o PIN...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Aluno Login (PIN + Nome) -->
+        <div id="view-student-login" class="hidden space-y-6 max-w-md mx-auto text-center py-6">
+            <div class="space-y-2">
+                <h2 class="text-3xl font-extrabold text-cyan-300">🎓 Entrada do Aluno (Online)</h2>
+                <p class="text-slate-300 text-sm">Digite o PIN fornecido pelo professor e o seu nome completo.</p>
+            </div>
+
+            <div class="bg-black/40 p-6 rounded-3xl border border-white/15 space-y-4 shadow-xl text-left">
+                <div class="space-y-1">
+                    <label for="input-pin-aluno" class="block text-xs font-semibold text-amber-300 uppercase tracking-wider">🔑 PIN da Sala Online (4 dígitos):</label>
+                    <input type="text" id="input-pin-aluno" maxlength="4" placeholder="Ex: 4821" class="w-full bg-white/10 border border-white/20 rounded-2xl p-4 text-2xl font-bold tracking-widest text-center text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                </div>
+
+                <div class="space-y-1">
+                    <label for="input-nome-aluno" class="block text-xs font-semibold text-cyan-300 uppercase tracking-wider">👤 Seu Nome Completo:</label>
+                    <input type="text" id="input-nome-aluno" placeholder="Digite seu nome completo..." class="w-full bg-white/10 border border-white/20 rounded-2xl p-4 text-lg font-bold text-center text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                </div>
+
+                <button type="button" onclick="entrarNoDesafioAlunoOnline()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg transition duration-200 text-lg cursor-pointer mt-2">
+                    Entrar e Jogar Online ➔
+                </button>
+
+                <div class="text-center pt-2">
+                    <button type="button" onclick="voltarParaSelecaoPerfil()" class="text-xs text-slate-400 hover:text-white underline cursor-pointer">
+                        ⬅ Voltar para a seleção de perfil
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 3: Active Challenge (20 Enchained Steps) -->
+        <div id="view-challenge" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/10">
+                <div>
+                    <p class="text-xs text-slate-300 uppercase tracking-wider font-semibold">Aluno Jogando</p>
+                    <h3 id="current-aluno-name" class="text-xl font-extrabold text-amber-300">Nome do Aluno</h3>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-xs text-slate-300 uppercase tracking-wider font-semibold">Corrente Aleatória</p>
+                        <span class="text-xl font-extrabold text-cyan-300">Passo <span id="current-round">1</span>/20</span>
+                    </div>
+                    <button type="button" onclick="sairParaLoginAluno()" class="bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 border border-rose-500/40 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer">
+                        ✕ Sair
+                    </button>
+                </div>
+            </div>
+
+            <!-- Questão Card Encadeado -->
+            <div class="bg-gradient-to-br from-indigo-900/60 via-purple-900/60 to-slate-900/80 p-8 rounded-3xl border border-white/20 text-center space-y-4 shadow-inner">
+                <div id="etapa-badge" class="inline-block bg-amber-400/20 text-amber-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-amber-400/30">
+                    Operação Encadeada
+                </div>
+                
+                <!-- Expressão visual atual -->
+                <div class="text-3xl md:text-5xl font-black tracking-tight text-white drop-shadow-md py-2">
+                    <span id="expressao-atual">5 × 7</span>
+                </div>
+                <p id="instrucao-etapa" class="text-slate-200 text-sm">Resolva a operação acima:</p>
+            </div>
+
+            <!-- Timer e Entrada -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div class="bg-black/40 p-4 rounded-2xl border border-white/10 text-center">
+                    <span class="text-xs text-slate-300 uppercase block">⏱️ Tempo Decorrido</span>
+                    <span id="timer-total" class="text-2xl font-bold text-rose-400">0s</span>
+                </div>
+                <div class="md:col-span-2 space-y-2">
+                    <input type="number" id="resposta-input" placeholder="Digite o resultado e aperte Enter..." class="w-full bg-white/10 border border-white/20 rounded-2xl p-4 text-2xl font-bold text-center text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400" autofocus>
+                    <button type="button" onclick="enviarRespostaOnline()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg transform hover:scale-[1.01] transition duration-200 text-lg cursor-pointer">
+                        Confirmar Resposta ➔
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 4: Result Summary for Student -->
+        <div id="view-result" class="hidden space-y-6 text-center">
+            <div class="space-y-2">
+                <h2 class="text-3xl font-extrabold text-amber-300">🎉 Desafio Concluído!</h2>
+                <p class="text-slate-200">Parabéns, <span id="res-aluno-nome" class="font-bold text-white"></span>! Seu resultado foi salvo.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+                <div class="bg-black/40 p-6 rounded-2xl border border-white/10">
+                    <span class="text-xs text-slate-300 uppercase tracking-wider">Acertos na Corrente</span>
+                    <div class="text-4xl font-black text-emerald-400 mt-2"><span id="res-pontos">0</span><span class="text-lg text-slate-400">/20</span></div>
+                </div>
+                <div class="bg-black/40 p-6 rounded-2xl border border-white/10">
+                    <span class="text-xs text-slate-300 uppercase tracking-wider">Tempo Total</span>
+                    <div class="text-4xl font-black text-rose-400 mt-2"><span id="res-tempo">0</span><span class="text-lg text-slate-400">s</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                <button type="button" onclick="abrirModalRelatorio()" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow-lg transition duration-200 text-base cursor-pointer inline-flex items-center justify-center gap-2">
+                    📊 Ver Relatório & Pódio Ao Vivo
+                </button>
+                <button type="button" onclick="voltarParaSelecaoPerfil()" class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transition duration-200 text-base cursor-pointer inline-flex items-center justify-center gap-2">
+                    🏠 Voltar ao Início
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Relatório Final e Ao Vivo -->
+    <div id="modal-relatorio" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 border border-white/20 w-full max-w-3xl rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-amber-300 flex items-center gap-2">
+                        <span>📊</span> Relatório Ao Vivo & Pódio da Turma
+                    </h2>
+                    <p class="text-xs text-slate-300 mt-1">Atualizado em tempo real com os alunos jogando e o ranking final.</p>
+                </div>
+                <button type="button" onclick="fecharModalRelatorio()" class="text-slate-400 hover:text-white text-2xl font-bold cursor-pointer">✕</button>
+            </div>
+
+            <div id="modal-relatorio-content" class="space-y-3">
+                <p class="text-slate-400 text-center py-6">Carregando dados...</p>
+            </div>
+
+            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                <button type="button" onclick="exportarRelatorioTexto()" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow transition cursor-pointer flex items-center gap-1.5">
+                    📋 Copiar Relatório
+                </button>
+                <button type="button" onclick="fecharModalRelatorio()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow transition cursor-pointer">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic with LocalStorage Sync (Instant and Reliable) -->
+    <script>
+        let gamePinAtual = "4821";
+        let alunoAtivoAtual = "";
+        let indicePasso = 0;
+        let resultadoAcumulado = 0;
+        let pontuacaoAtual = 0;
+        let tempoTotalSegundos = 0;
+        let timerId = null;
+        let passosAtuais = [];
+        let intervaloSync = null;
+
+        window.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pinUrl = urlParams.get('pin');
+            if (pinUrl) {
+                document.getElementById("input-pin-aluno").value = pinUrl;
+                mudarParaAlunoLogin();
+            }
+        });
+
+        window.esconderTodasViews = function() {
+            document.getElementById("view-role-selection").classList.add("hidden");
+            document.getElementById("view-teacher-dashboard").classList.add("hidden");
+            document.getElementById("view-student-login").classList.add("hidden");
+            document.getElementById("view-challenge").classList.add("hidden");
+            document.getElementById("view-result").classList.add("hidden");
+        };
+
+        window.voltarParaSelecaoPerfil = function() {
+            if (timerId) clearInterval(timerId);
+            if (intervaloSync) clearInterval(intervaloSync);
+            window.esconderTodasViews();
+            document.getElementById("view-role-selection").classList.remove("hidden");
+        };
+
+        window.mudarParaProfessor = function() {
+            window.esconderTodasViews();
+            document.getElementById("view-teacher-dashboard").classList.remove("hidden");
+            criarOuCarregarSalaProfessor();
+        };
+
+        window.mudarParaAlunoLogin = function() {
+            window.esconderTodasViews();
+            document.getElementById("view-student-login").classList.remove("hidden");
+            document.getElementById("input-nome-aluno").value = "";
+        };
+
+        function criarOuCarregarSalaProfessor() {
+            const pinEl = document.getElementById("display-game-pin");
+            const linkInfoEl = document.getElementById("shareable-link-info");
+            
+            // Gerar PIN se não houver
+            if (!gamePinAtual || gamePinAtual === "----") {
+                gamePinAtual = Math.floor(1000 + Math.random() * 9000).toString();
+            }
+            pinEl.textContent = gamePinAtual;
+            
+            const shareUrl = window.location.origin + window.location.pathname + "?pin=" + gamePinAtual;
+            linkInfoEl.textContent = "Link: " + shareUrl;
+
+            iniciarMonitoramentoTurma();
+        }
+
+        window.gerarNovoPinOnline = function() {
+            gamePinAtual = Math.floor(1000 + Math.random() * 9000).toString();
+            criarOuCarregarSalaProfessor();
+        };
+
+        window.copiarLinkSala = function() {
+            const shareUrl = window.location.origin + window.location.pathname + "?pin=" + gamePinAtual;
+            const ta = document.createElement("textarea");
+            ta.value = shareUrl;
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                alert("Link da sala online copiado para a área de transferência!");
+            } catch(e) {
+                alert("Erro ao copiar link.");
+            }
+            document.body.removeChild(ta);
+        };
+
+        function iniciarMonitoramentoTurma() {
+            if (intervaloSync) clearInterval(intervaloSync);
+            atualizarListaTurmaUI();
+            intervaloSync = setInterval(atualizarListaTurmaUI, 1500);
+        }
+
+        function atualizarListaTurmaUI() {
+            const listEl = document.getElementById("turma-status-list");
+            const contadorEl = document.getElementById("contador-turma");
+            
+            let salaData = {};
+            try {
+                const raw = localStorage.getItem(`sala_tabuada_${gamePinAtual}`);
+                if (raw) salaData = JSON.parse(raw);
+            } catch(e) {}
+
+            const nomes = Object.keys(salaData);
+            contadorEl.textContent = nomes.length;
+
+            if (nomes.length === 0) {
+                listEl.innerHTML = `<p class="text-slate-400 text-center italic py-4">Aguardando alunos entrarem com o PIN ${gamePinAtual}...</p>`;
+                return;
+            }
+
+            let html = "";
+            nomes.sort().forEach(nome => {
+                const aluno = salaData[nome];
+                let badge = "";
+                if (aluno.jogou || aluno.status === 'finalizado') {
+                    badge = `<span class="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-xl font-bold text-xs">✅ Finalizou: ${aluno.pontos}/20 pts (${aluno.tempo}s)</span>`;
+                } else {
+                    badge = `<span class="bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-xl font-bold text-xs animate-pulse">⚡ Jogando (Passo ${aluno.passoAtual || 1}/20)...</span>`;
+                }
+
+                html += `
+                    <div class="flex justify-between items-center bg-white/5 border border-white/10 px-4 py-3 rounded-2xl gap-3">
+                        <span class="font-bold text-white flex items-center gap-2"><span>👤</span> ${nome}</span>
+                        <div class="flex items-center gap-3">
+                            ${badge}
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        }
+
+        window.entrarNoDesafioAlunoOnline = function() {
+            const pinDigitado = document.getElementById("input-pin-aluno").value.trim();
+            const nomeAluno = document.getElementById("input-nome-aluno").value.trim();
+
+            if (!pinDigitado || pinDigitado.length !== 4) {
+                alert("Por favor, digite o PIN válido de 4 dígitos.");
+                return;
+            }
+
+            if (!nomeAluno) {
+                alert("Por favor, digite seu nome completo!");
+                return;
+            }
+
+            gamePinAtual = pinDigitado;
+            alunoAtivoAtual = nomeAluno;
+
+            salvarProgressoAlunoLocal({
+                pin: pinDigitado,
+                nome: nomeAluno,
+                jogou: false,
+                status: 'jogando',
+                pontos: 0,
+                tempo: 0,
+                passoAtual: 1
+            });
+
+            iniciarDesafioCorrente20Passos();
+        };
+
+        function salvarProgressoAlunoLocal(dados) {
+            try {
+                const key = `sala_tabuada_${gamePinAtual}`;
+                let salaData = {};
+                const raw = localStorage.getItem(key);
+                if (raw) salaData = JSON.parse(raw);
+
+                salaData[dados.nome] = dados;
+                localStorage.setItem(key, JSON.stringify(salaData));
+            } catch(e) {}
+        }
+
+        function gerarCorrenteAleatoria20Passos() {
+            const ops = ['mult', 'soma', 'sub', 'div'];
+            let passos = [];
+
+            const numA = Math.floor(Math.random() * 8) + 3;
+            const numB = Math.floor(Math.random() * 8) + 3;
+            passos.push({
+                operacao: "mult",
+                val: numB,
+                texto: `${numA} × ${numB}`,
+                resultadoBase: numA * numB
+            });
+
+            let valorAtual = numA * numB;
+
+            for (let i = 1; i < 20; i++) {
+                const op = ops[Math.floor(Math.random() * ops.length)];
+                let obj = {};
+
+                if (op === 'soma') {
+                    const v = Math.floor(Math.random() * 15) + 3;
+                    obj = { operacao: "soma", val: v, texto: `+ ${v}` };
+                    valorAtual += v;
+                } else if (op === 'sub') {
+                    const v = Math.floor(Math.random() * 12) + 2;
+                    if (valorAtual - v <= 2) {
+                        const vs = Math.floor(Math.random() * 10) + 3;
+                        obj = { operacao: "soma", val: vs, texto: `+ ${vs}` };
+                        valorAtual += vs;
+                    } else {
+                        obj = { operacao: "sub", val: v, texto: `- ${v}` };
+                        valorAtual -= v;
+                    }
+                } else if (op === 'mult') {
+                    const v = Math.floor(Math.random() * 3) + 2;
+                    obj = { operacao: "mult", val: v, texto: `× ${v}` };
+                    valorAtual *= v;
+                } else {
+                    const divisores = [2, 3, 4, 5].filter(d => valorAtual % d === 0);
+                    if (divisores.length > 0) {
+                        const v = divisores[Math.floor(Math.random() * divisores.length)];
+                        obj = { operacao: "div", val: v, texto: `÷ ${v}` };
+                        valorAtual = valorAtual / v;
+                    } else {
+                        const vs = Math.floor(Math.random() * 10) + 3;
+                        obj = { operacao: "soma", val: vs, texto: `+ ${vs}` };
+                        valorAtual += vs;
+                    }
+                }
+                passos.push(obj);
+            }
+            return passos;
+        }
+
+        function iniciarDesafioCorrente20Passos() {
+            passosAtuais = gerarCorrenteAleatoria20Passos();
+            indicePasso = 0;
+            pontuacaoAtual = 0;
+            tempoTotalSegundos = 0;
+            resultadoAcumulado = 0;
+
+            window.esconderTodasViews();
+            document.getElementById("view-challenge").classList.remove("hidden");
+            document.getElementById("current-aluno-name").textContent = alunoAtivoAtual;
+
+            if (timerId) clearInterval(timerId);
+            timerId = setInterval(() => {
+                tempoTotalSegundos++;
+                document.getElementById("timer-total").textContent = tempoTotalSegundos + "s";
+                salvarProgressoAlunoLocal({
+                    pin: gamePinAtual,
+                    nome: alunoAtivoAtual,
+                    jogou: false,
+                    status: 'jogando',
+                    pontos: pontuacaoAtual,
+                    tempo: tempoTotalSegundos,
+                    passoAtual: indicePasso + 1
+                });
+            }, 1000);
+
+            carregarPassoAtual();
+        }
+
+        window.sairParaLoginAluno = function() {
+            if (timerId) clearInterval(timerId);
+            mudarParaAlunoLogin();
+        };
+
+        function carregarPassoAtual() {
+            if (indicePasso < passosAtuais.length) {
+                document.getElementById("current-round").textContent = indicePasso + 1;
+                const p = passosAtuais[indicePasso];
+                const inputEl = document.getElementById("resposta-input");
+                inputEl.value = "";
+                inputEl.focus();
+
+                let desc = "";
+                if (indicePasso === 0) {
+                    desc = `Passo 1: Calcule ${p.texto}`;
+                    document.getElementById("expressao-atual").textContent = p.texto;
+                    document.getElementById("instrucao-etapa").textContent = "Digite o resultado desta operação inicial:";
+                    resultadoAcumulado = p.resultadoBase;
+                } else {
+                    let nomeOp = p.operacao === 'soma' ? 'Some' : p.operacao === 'sub' ? 'Subtraia' : p.operacao === 'mult' ? 'Multiplique' : 'Divida';
+                    desc = `Passo ${indicePasso + 1}: Pegue ${resultadoAcumulado} e ${p.texto}`;
+                    document.getElementById("expressao-atual").textContent = `${resultadoAcumulado} ${p.texto}`;
+                    document.getElementById("instrucao-etapa").textContent = `Pegue o resultado anterior (${resultadoAcumulado}) e ${nomeOp.toLowerCase()} ${p.val}:`;
+                }
+                document.getElementById("etapa-badge").textContent = desc;
+            } else {
+                finalizarDesafioAlunoOnline();
+            }
+        }
+
+        window.enviarRespostaOnline = function() {
+            const valInput = parseFloat(document.getElementById("resposta-input").value);
+            const p = passosAtuais[indicePasso];
+
+            if (isNaN(valInput)) return;
+
+            let esperado = 0;
+            if (indicePasso === 0) {
+                esperado = p.resultadoBase;
+            } else {
+                if (p.operacao === 'soma') esperado = resultadoAcumulado + p.val;
+                else if (p.operacao === 'sub') esperado = resultadoAcumulado - p.val;
+                else if (p.operacao === 'mult') esperado = resultadoAcumulado * p.val;
+                else if (p.operacao === 'div') esperado = resultadoAcumulado / p.val;
+            }
+
+            if (Math.abs(valInput - esperado) < 0.001) {
+                pontuacaoAtual += 1;
+                resultadoAcumulado = esperado;
+            } else {
+                resultadoAcumulado = esperado;
+            }
+
+            indicePasso++;
+            carregarPassoAtual();
+        };
+
+        function finalizarDesafioAlunoOnline() {
+            if (timerId) clearInterval(timerId);
+
+            salvarProgressoAlunoLocal({
+                pin: gamePinAtual,
+                nome: alunoAtivoAtual,
+                jogou: true,
+                status: 'finalizado',
+                pontos: pontuacaoAtual,
+                tempo: tempoTotalSegundos,
+                passoAtual: 20
+            });
+
+            window.esconderTodasViews();
+            document.getElementById("view-result").classList.remove("hidden");
+            document.getElementById("res-aluno-nome").textContent = alunoAtivoAtual;
+            document.getElementById("res-pontos").textContent = pontuacaoAtual;
+            document.getElementById("res-tempo").textContent = tempoTotalSegundos;
+        }
+
+        window.abrirModalRelatorio = function() {
+            const modal = document.getElementById("modal-relatorio");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            renderizarRelatorioModal();
+        };
+
+        window.fecharModalRelatorio = function() {
+            const modal = document.getElementById("modal-relatorio");
+            modal.classList.remove("flex");
+            modal.classList.add("hidden");
+        };
+
+        function renderizarRelatorioModal() {
+            const content = document.getElementById("modal-relatorio-content");
+            let salaData = {};
+            try {
+                const raw = localStorage.getItem(`sala_tabuada_${gamePinAtual}`);
+                if (raw) salaData = JSON.parse(raw);
+            } catch(e) {}
+
+            let ranking = [];
+            let emAndamento = [];
+
+            Object.values(salaData).forEach(item => {
+                if (item.jogou || item.status === 'finalizado') {
+                    ranking.push(item);
+                } else {
+                    emAndamento.push(item);
+                }
+            });
+
+            ranking.sort((a, b) => b.pontos - a.pontos || a.tempo - b.tempo);
+
+            let html = "";
+
+            if (ranking.length === 0 && emAndamento.length === 0) {
+                content.innerHTML = `<p class="text-slate-400 text-center italic py-6">Nenhum aluno entrou na sala com o PIN ${gamePinAtual} ainda.</p>`;
+                return;
+            }
+
+            if (ranking.length > 0) {
+                html += `<h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-2">🏆 Concluíram o Desafio (${ranking.length})</h3>`;
+                ranking.forEach((item, index) => {
+                    let cor = index === 0 ? "bg-amber-500/20 border-amber-400/40 text-amber-300" : index === 1 ? "bg-slate-300/20 border-slate-300/40 text-slate-200" : index === 2 ? "bg-amber-700/20 border-amber-600/40 text-amber-400" : "bg-white/5 border-white/10 text-white";
+                    let pos = index === 0 ? "👑 1º Lugar" : index === 1 ? "🥈 2º Lugar" : index === 2 ? "🥉 3º Lugar" : `${index + 1}º Lugar`;
+
+                    html += `
+                        <div class="flex justify-between items-center p-3.5 rounded-2xl border ${cor} mb-2">
+                            <div class="flex items-center gap-3">
+                                <span class="font-black text-sm md:text-base">${pos}</span>
+                                <span class="font-bold text-sm md:text-base">${item.nome}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs md:text-sm font-bold">
+                                <span class="bg-emerald-500/30 px-3 py-1 rounded-xl">⭐ ${item.pontos}/20 pts</span>
+                                <span class="bg-rose-500/30 px-3 py-1 rounded-xl">⏱️ ${item.tempo}s</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (emAndamento.length > 0) {
+                html += `<h3 class="text-sm font-bold text-cyan-300 uppercase tracking-wider mt-4 mb-2">⚡ Jogando Agora na Corrente (${emAndamento.length})</h3>`;
+                emAndamento.forEach(item => {
+                    html += `
+                        <div class="flex justify-between items-center p-3 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 text-cyan-200 mb-2 text-sm">
+                            <span class="font-bold">👤 ${item.nome}</span>
+                            <span class="bg-cyan-500/20 px-3 py-1 rounded-xl font-bold text-xs animate-pulse">Passo ${item.passoAtual || 1}/20</span>
+                        </div>
+                    `;
+                });
+            }
+
+            content.innerHTML = html;
+        }
+
+        window.exportarRelatorioTexto = function() {
+            let salaData = {};
+            try {
+                const raw = localStorage.getItem(`sala_tabuada_${gamePinAtual}`);
+                if (raw) salaData = JSON.parse(raw);
+            } catch(e) {}
+
+            let ranking = Object.values(salaData).filter(item => item.jogou || item.status === 'finalizado');
+            ranking.sort((a, b) => b.pontos - a.pontos || a.tempo - b.tempo);
+
+            if (ranking.length === 0) {
+                alert("Sem dados para exportar ainda.");
+                return;
+            }
+
+            let txt = "🏆 RELATÓRIO FINAL - SUPER DESAFIO ENCADEADO\n\n";
+            ranking.forEach((i, idx) => {
+                txt += `${idx + 1}º ${i.nome} - Pontos: ${i.pontos}/20 - Tempo: ${i.tempo}s\n`;
+            });
+
+            const ta = document.createElement("textarea");
+            ta.value = txt;
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                alert("Relatório copiado para a área de transferência!");
+            } catch(e) {
+                alert("Erro ao copiar.");
+            }
+            document.body.removeChild(ta);
+        };
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                const cv = document.getElementById("view-challenge");
+                if (cv && !cv.classList.contains("hidden")) {
+                    window.enviarRespostaOnline();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
